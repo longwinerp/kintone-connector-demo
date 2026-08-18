@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="dark" data-accent="cyan">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#071a2b">
+    <title>Kintone Connector · 單頭單身查詢台</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d2337'/><text x='16' y='23' font-size='18' font-weight='700' text-anchor='middle' fill='%2355d8e8'>K</text></svg>">
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="topbar">
+    <div class="brand">
+        <span class="brand-mark" aria-hidden="true">K</span>
+        <div class="brand-copy">
+            <strong>Kintone Connector</strong>
+            <span>單頭單身查詢台</span>
+        </div>
+    </div>
+
+    <div class="topbar-center">
+        <div id="targetPill" class="pill pill-target" title="目前查詢目標">
+            <i class="dot"></i><span id="targetText">尚未設定連線</span>
+        </div>
+    </div>
+
+    <div class="topbar-actions">
+        <button id="panelToggle" class="ghost-button" type="button" title="收合／展開左側工作台（Ctrl + B）">
+            <span id="panelToggleIcon" aria-hidden="true">⟨</span><span id="panelToggleLabel">收合面板</span>
+        </button>
+        <div class="palette" role="group" aria-label="配色">
+            <button class="swatch" data-accent="cyan" title="青" aria-label="青色"></button>
+            <button class="swatch" data-accent="violet" title="紫" aria-label="紫色"></button>
+            <button class="swatch" data-accent="amber" title="琥珀" aria-label="琥珀色"></button>
+        </div>
+        <button id="themeToggle" class="ghost-button" type="button" title="切換淺色／深色">
+            <span class="theme-icon" aria-hidden="true">◐</span><span id="themeLabel">深色</span>
+        </button>
+        <a class="ghost-button" href="/health" target="_blank" rel="noopener">健康檢查</a>
+    </div>
+</header>
+
+<main class="layout" id="layout">
+    <!-- 工作台收起來後，靠這個邊條拉回來 -->
+    <button id="panelRestore" class="panel-restore hidden" type="button" title="展開工作台（Ctrl + B）">
+        <span aria-hidden="true">›</span><b>查詢設定</b>
+    </button>
+
+    <!-- ── 左側工作台 ───────────────────────────────────────────── -->
+    <aside class="workbench" id="workbench">
+        <section class="step" data-step="1">
+            <header class="step-head">
+                <span class="step-no">1</span>
+                <div>
+                    <h2>連線</h2>
+                    <p>選伺服器保管好的 Profile，或直接輸入自己的 URL／App ID／API Token。</p>
+                </div>
+            </header>
+
+            <div class="segmented" role="tablist" aria-label="連線來源">
+                <button type="button" class="seg active" data-source="profile" role="tab">伺服器 Profile</button>
+                <button type="button" class="seg" data-source="custom" role="tab">自訂連線</button>
+            </div>
+
+            <div class="source-pane" data-pane="profile">
+                <label for="profile">Profile</label>
+                <div class="row-2">
+                    <select id="profile"><option value="">讀取中…</option></select>
+                    <button id="reloadProfiles" class="mini-button" type="button">重新載入</button>
+                </div>
+                <p id="profileMeta" class="hint">—</p>
+            </div>
+
+            <div class="source-pane hidden" data-pane="custom">
+                <label for="connectionName">連線名稱</label>
+                <input id="connectionName" type="text" placeholder="例如：昕福喜-請款單" autocomplete="off">
+                <p class="hint">用來存成下方清單的一組連線，可以存很多組隨時切換。</p>
+
+                <label for="baseUrl">Kintone 網址</label>
+                <input id="baseUrl" type="url" placeholder="https://example.cybozu.com" autocomplete="off" spellcheck="false">
+                <p class="hint">貼整段網址也可以，系統只會取用網域部分。</p>
+
+                <div class="row-2 gap">
+                    <div>
+                        <label for="appId">App ID</label>
+                        <input id="appId" type="number" min="1" step="1" placeholder="100" autocomplete="off">
+                    </div>
+                    <div>
+                        <label for="apiPath">API 路徑</label>
+                        <input id="apiPath" type="text" placeholder="/k/v1/records.json" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+                <p class="hint">Guest Space 請填 <code>/k/guest/{空間編號}/v1/records.json</code>。</p>
+
+                <label for="apiToken">API Token</label>
+                <div class="row-2">
+                    <input id="apiToken" type="password" placeholder="Kintone 應用程式的 API Token" autocomplete="off">
+                    <button id="toggleToken" class="mini-button" type="button">顯示</button>
+                </div>
+                <label class="check-line">
+                    <input id="rememberToken" type="checkbox">
+                    <span>在這台電腦記住 Token</span>
+                </label>
+                <p class="hint">不勾選時只留在本分頁（sessionStorage），關掉即消失。</p>
+
+                <div class="saved-block">
+                    <div class="saved-head">
+                        <span>連線清單（可存多組）</span>
+                        <button id="saveConnection" class="mini-button" type="button">＋ 存成一組</button>
+                    </div>
+                    <div id="savedList" class="conn-list"></div>
+                    <p class="hint">點整列＝套用；「測」＝套用後立刻測試連線。</p>
+                </div>
+            </div>
+
+            <label for="gatewayKey">Connector API Key</label>
+            <div class="row-2">
+                <input id="gatewayKey" type="password" autocomplete="off" placeholder="開發機由本機存取時可留空">
+                <button id="toggleKey" class="mini-button" type="button">顯示</button>
+            </div>
+            <p class="hint">此金鑰是給本閘道用的，不會送到 Kintone。</p>
+
+            <button id="testButton" class="soft-button block" type="button">測試連線並載入欄位定義</button>
+            <p id="connectionStatus" class="hint status-line">尚未測試。</p>
+        </section>
+
+        <section class="step" data-step="2">
+            <header class="step-head">
+                <span class="step-no">2</span>
+                <div>
+                    <h2>查詢條件</h2>
+                    <p>Kintone Query 語法；分頁請用下方欄位，不必自己寫 limit／offset。</p>
+                </div>
+            </header>
+
+            <label for="query">Kintone Query</label>
+            <textarea id="query" rows="5" spellcheck="false"
+                      placeholder='狀態 in ("進行中") and 更新日期 &gt; "2026-01-01"'></textarea>
+            <div class="chips snippet-chips">
+                <button type="button" class="chip" data-snippet="order by $id desc">order by $id desc</button>
+                <button type="button" class="chip" data-snippet="order by 更新日期 desc">依更新日期</button>
+                <button type="button" class="chip" data-snippet='$id &gt; "0"'>$id &gt; 0</button>
+                <button type="button" class="chip danger" data-snippet="">清空</button>
+            </div>
+
+            <label for="fields">回傳欄位</label>
+            <input id="fields" type="text" placeholder="留空＝全部欄位；多個以逗號分隔" autocomplete="off" spellcheck="false">
+            <div class="field-picker">
+                <div class="picker-head">
+                    <span>欄位挑選器</span>
+                    <div>
+                        <button id="clearFields" class="mini-button" type="button">清除</button>
+                        <button id="toggleFieldPicker" class="mini-button" type="button">展開</button>
+                    </div>
+                </div>
+                <div id="fieldChips" class="chips hidden empty-chips">請先「測試連線並載入欄位定義」</div>
+            </div>
+
+            <div class="row-3 gap">
+                <div>
+                    <label for="limit">單次筆數</label>
+                    <input id="limit" type="number" min="1" max="500" step="1" value="100">
+                </div>
+                <div>
+                    <label for="offset">位移</label>
+                    <input id="offset" type="number" min="0" max="10000" step="1" value="0">
+                </div>
+                <div class="pager-cell">
+                    <label>翻頁</label>
+                    <div class="pager">
+                        <button id="prevPage" class="mini-button" type="button" title="上一頁">‹</button>
+                        <button id="nextPage" class="mini-button" type="button" title="下一頁">›</button>
+                    </div>
+                </div>
+            </div>
+
+            <label class="check-line">
+                <input id="totalCount" type="checkbox" checked>
+                <span>取得符合條件的總筆數</span>
+            </label>
+            <label class="check-line">
+                <input id="withLabels" type="checkbox" checked>
+                <span>以中文欄位名稱顯示（需讀取欄位定義）</span>
+            </label>
+        </section>
+
+        <!-- 永遠貼在左欄底部，捲到哪都按得到 -->
+        <div class="workbench-footer">
+            <button id="runButton" class="primary block" type="button">
+                <span>執行查詢</span>
+                <kbd>Ctrl</kbd><kbd>↵</kbd>
+            </button>
+            <p id="runHint" class="hint">按下後才會真的向 Kintone 取資料。</p>
+        </div>
+    </aside>
+
+    <!-- ── 右側結果舞台 ─────────────────────────────────────────── -->
+    <section class="stage">
+        <div class="metabar" id="metaBar">
+            <div class="meta-item"><span class="meta-label">狀態</span><strong id="metaStatus" class="idle">待命</strong></div>
+            <div class="meta-item"><span class="meta-label">本次筆數</span><strong id="metaCount">—</strong></div>
+            <div class="meta-item"><span class="meta-label">符合總數</span><strong id="metaTotal">—</strong></div>
+            <div class="meta-item"><span class="meta-label">子表</span><strong id="metaDetails">—</strong></div>
+            <div class="meta-item"><span class="meta-label">耗時</span><strong id="metaElapsed">—</strong></div>
+            <div class="meta-query" id="metaQuery" title="實際送出的查詢">—</div>
+        </div>
+
+        <nav class="viewtabs">
+            <button class="vtab active" data-view="masterDetail">單頭單身</button>
+            <button class="vtab" data-view="table">總表</button>
+            <button class="vtab" data-view="cards">卡片</button>
+            <button class="vtab" data-view="json">JSON</button>
+            <span class="flex-spacer"></span>
+            <div class="dropdown">
+                <button id="exportButton" class="mini-button" type="button" disabled>匯出 ▾</button>
+                <div id="exportMenu" class="dropdown-menu hidden"></div>
+            </div>
+        </nav>
+
+        <div class="views">
+            <!-- 單頭單身 -->
+            <div class="view active" data-view="masterDetail">
+                <div class="md-split" id="mdSplit">
+                    <button id="listRestore" class="list-restore hidden" type="button" title="展開紀錄清單">
+                        <span aria-hidden="true">›</span><b>紀錄</b>
+                    </button>
+                    <div class="md-list">
+                        <div class="md-list-head">
+                            <input id="recordSearch" type="search" placeholder="搜尋紀錄…" autocomplete="off">
+                            <span id="recordCountBadge" class="badge">0</span>
+                            <button id="listToggle" class="icon-btn" type="button" title="收合紀錄清單">‹</button>
+                        </div>
+                        <ul id="recordList" class="record-list"></ul>
+                    </div>
+                    <div class="md-detail" id="detailPane">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 120 90" class="empty-art" aria-hidden="true">
+                                <rect x="8" y="10" width="60" height="34" rx="6"></rect>
+                                <rect x="8" y="52" width="104" height="10" rx="4" class="dim"></rect>
+                                <rect x="8" y="66" width="104" height="10" rx="4" class="dim"></rect>
+                                <rect x="76" y="10" width="36" height="34" rx="6" class="dim"></rect>
+                            </svg>
+                            <h3>還沒有資料</h3>
+                            <p>連線設定好之後，請按左欄<strong>最下方的「執行查詢」</strong>（或 Ctrl + Enter）。
+                               「測試連線」只驗證帳密與欄位定義，不會取資料。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 總表 -->
+            <div class="view" data-view="table">
+                <div class="table-tools">
+                    <select id="tableSource" title="要看哪一層資料"></select>
+                    <input id="tableSearch" type="search" placeholder="全欄位搜尋…" autocomplete="off">
+                    <div class="dropdown">
+                        <button id="columnsButton" class="mini-button" type="button">欄位顯示</button>
+                        <div id="columnsMenu" class="dropdown-menu hidden"></div>
+                    </div>
+                    <span class="flex-spacer"></span>
+                    <span id="tableRowInfo" class="badge">0 列</span>
+                </div>
+                <div class="table-wrap"><table id="flatTable" class="grid"></table></div>
+            </div>
+
+            <!-- 卡片 -->
+            <div class="view" data-view="cards">
+                <div class="cards-tools">
+                    <input id="cardSearch" type="search" placeholder="搜尋紀錄…" autocomplete="off">
+                    <span class="flex-spacer"></span>
+                    <span id="cardInfo" class="badge">0 筆</span>
+                </div>
+                <div id="cardGrid" class="card-grid"></div>
+            </div>
+
+            <!-- JSON -->
+            <div class="view" data-view="json">
+                <div class="json-tools">
+                    <div class="segmented small" id="jsonMode">
+                        <button type="button" class="seg active" data-json="raw">Kintone 原始</button>
+                        <button type="button" class="seg" data-json="shaped">整理後（單頭單身）</button>
+                    </div>
+                    <span class="flex-spacer"></span>
+                    <button id="copyJson" class="mini-button" type="button">複製</button>
+                </div>
+                <pre id="jsonOutput" tabindex="0">{
+  "message": "設定查詢條件後按「執行查詢」"
+}</pre>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="toastHost" class="toast-host" aria-live="polite"></div>
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

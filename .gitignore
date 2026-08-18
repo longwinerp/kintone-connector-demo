@@ -1,0 +1,27 @@
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# 建置產出
+**/bin/
+**/obj/
+publish/
+artifacts/
+
+# 執行期
+logs/
+*.log
+
+# 機密：一律不要進版控
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+*.env
+.env*
+
+# 作業系統
+.DS_Store
+Thumbs.db

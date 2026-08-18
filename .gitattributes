@@ -1,0 +1,19 @@
+# 統一換行處理：入庫一律 LF，簽出時依平台自動轉換
+* text=auto
+
+*.cs      text diff=csharp
+*.csproj  text eol=crlf
+*.sln     text eol=crlf
+*.config  text eol=crlf
+
+*.md      text
+*.json    text
+*.js      text
+*.css     text
+*.html    text
+*.yml     text
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary

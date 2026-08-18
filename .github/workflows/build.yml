@@ -1,0 +1,35 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore KintoneConnector.sln
+
+      - name: Build
+        run: dotnet build KintoneConnector.sln --no-restore -c Release
+
+      - name: Publish
+        run: dotnet publish KintoneConnector.Web/KintoneConnector.Web.csproj -c Release -o publish --no-build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kintone-connector-demo
+          path: publish
