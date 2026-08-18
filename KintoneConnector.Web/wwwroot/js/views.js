@@ -207,6 +207,17 @@ export function setResult(result) {
     if (result.fieldsWarning) toast(result.fieldsWarning, "warn", 4200);
 }
 
+/** 依網址 hash 指定要呈現的檢視與總表資料來源（供分享連結與截圖使用）。 */
+export function applyPresentation({ view, tableSource } = {}) {
+    if (tableSource && state.datasets.some(dataset => dataset.id === tableSource)) {
+        state.table.sourceId = tableSource;
+        state.table.sort = null;
+        dom.tableSource.value = tableSource;
+        renderTable();
+    }
+    if (view) activateView(view);
+}
+
 export function activateView(name) {
     state.view = name;
     $$(".vtab").forEach(tab => tab.classList.toggle("active", tab.dataset.view === name));

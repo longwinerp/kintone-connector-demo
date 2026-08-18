@@ -1,21 +1,22 @@
 # 截圖
 
-把畫面截圖放在這個資料夾，然後把根目錄 `README.md` 裡「## 畫面」底下的註解標記拿掉即可顯示。
+根目錄 `README.md` 的「畫面」區塊會引用這裡的圖片。
 
-## 建議的檔名與內容
+| 檔名 | 內容 | 產生用的網址 hash |
+| --- | --- | --- |
+| `01-master-detail.png` | 單頭單身 | `#` |
+| `02-table.png` | 單身總表，左側面板收合 | `#view=table&table=detail:items&panel=collapsed` |
+| `03-cards.png` | 卡片檢視 | `#view=cards` |
+| `04-json.png` | JSON 檢視 | `#view=json` |
+| `05-light.png` | 淺色主題 ＋ 紫色強調 | `#theme=light&accent=violet` |
 
-| 檔名 | 拍什麼 |
-| --- | --- |
-| `01-master-detail.png` | 單頭單身檢視：左邊紀錄清單、右邊單頭欄位卡＋子表格明細 |
-| `02-table.png` | 總表檢視，把「資料來源」切到「單頭＋費用明細（合併）」 |
-| `03-cards.png` | 卡片檢視 |
-| `04-connection.png` | 左側連線區塊，連線清單存了兩三組的樣子 |
-| `05-dark.png` | 深色主題（右上角切換），最好挑跟 01 不同的檢視 |
+## 重拍方式
 
-## 拍攝建議
+先啟動服務，再用 Chrome 或 Edge 的無頭模式輸出 PNG（`--user-data-dir` 每次都要換新的，
+示範資料才會自動查詢）：
 
-- 用內建的示範資料拍就好，不會外流任何客戶資訊
-- 瀏覽器視窗建議 1440×900 以上，讓兩欄版面完整入鏡
-- 只拍瀏覽器內容區，不要拍到書籤列與桌面
-- 單張控制在 400 KB 以內（PNG 即可），README 載入才不會慢
-- 想錄操作過程可以放 `demo.gif`，同樣放這個資料夾
+```bash
+chrome --headless=new --disable-gpu --hide-scrollbars --ignore-certificate-errors --user-data-dir="%TEMP%/shot01" --window-size=1600,1000 --virtual-time-budget=15000 --screenshot="docs/screenshots/01-master-detail.png" "https://localhost:7298/#"
+```
+
+也可以直接開瀏覽器按 Win + Shift + S 自己截，檔名對上即可。

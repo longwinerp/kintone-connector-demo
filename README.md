@@ -18,22 +18,19 @@
 
 ## 畫面
 
-> 📸 截圖待補。把圖片放進 [`docs/screenshots/`](docs/screenshots/)（檔名見該資料夾說明），
-> 再把下方註解拿掉就會顯示。
-
-<!-- 截圖放好後，刪掉這兩行註解標記即可顯示：
 | 單頭單身：左邊紀錄清單，右邊單頭欄位 ＋ 各張子表格明細 |
 | :---: |
 | ![單頭單身](docs/screenshots/01-master-detail.png) |
 
-| 總表（單頭＋單身合併） | 卡片檢視 |
+| 單身總表（可切換單頭／單身／合併，左側面板已收合） | 卡片檢視 |
 | :---: | :---: |
 | ![總表](docs/screenshots/02-table.png) | ![卡片](docs/screenshots/03-cards.png) |
 
-| 連線設定（可存多組） | 深色主題 |
+| JSON 檢視（原始／整理後可切換） | 淺色主題 ＋ 紫色強調 |
 | :---: | :---: |
-| ![連線設定](docs/screenshots/04-connection.png) | ![深色主題](docs/screenshots/05-dark.png) |
--->
+| ![JSON](docs/screenshots/04-json.png) | ![淺色主題](docs/screenshots/05-light.png) |
+
+> 以上都是內建示範資料的實際畫面。
 
 ## 為什麼需要它
 
@@ -116,6 +113,20 @@ Security__GatewayApiKey
 - **JSON** — Kintone 原始 JSON 或整理後結構
 
 快捷鍵：`Ctrl + Enter` 執行查詢、`Ctrl + B` 收合／展開左側面板。
+
+網址 hash 可以指定要呈現的樣子，方便把特定畫面分享給別人：
+
+```text
+https://localhost:7298/#view=table&table=detail:items&theme=light&accent=violet&panel=collapsed
+```
+
+| 參數 | 可用值 |
+| --- | --- |
+| `view` | `masterDetail`、`table`、`cards`、`json` |
+| `table` | `header`、`detail:{子表代碼}`、`join:{子表代碼}` |
+| `theme` | `dark`、`light` |
+| `accent` | `cyan`、`violet`、`amber` |
+| `panel` | `collapsed`、`expanded` |
 
 ## API
 

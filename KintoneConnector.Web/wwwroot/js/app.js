@@ -3,7 +3,25 @@
 import { $, $$, escapeHtml, toast } from "./dom.js";
 import { prefs, form, secrets, connections } from "./store.js";
 import { api, useGatewayKey } from "./api.js";
-import { initViews, setResult, setBusy, showError, setStatus, activateView } from "./views.js";
+import { initViews, setResult, setBusy, showError, setStatus, activateView, applyPresentation } from "./views.js";
+
+/**
+ * 網址 hash 可以指定畫面呈現方式，例如：
+ *   #view=table&table=join:items&theme=light&accent=violet&panel=collapsed
+ * 方便把「某個檢視的樣子」直接分享給別人，也用於自動化截圖。
+ */
+function readHashOptions() {
+    const params = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+    return {
+        view: params.get("view"),
+        table: params.get("table"),
+        theme: params.get("theme"),
+        accent: params.get("accent"),
+        panel: params.get("panel")
+    };
+}
+
+const hashOptions = readHashOptions();
 
 /** 只在示範模式用來判斷「這台瀏覽器有沒有查過」，用來決定要不要自動跑一次。 */
 const RAN_KEY = "kc.everRan";
@@ -77,9 +95,9 @@ function cacheElements() {
 /* ── 外觀 ───────────────────────────────────────────────────────── */
 
 function applyPreferences() {
-    setTheme(prefs.theme);
-    setAccent(prefs.accent);
-    setPanelCollapsed(prefs.panelCollapsed);
+    setTheme(hashOptions.theme === "light" || hashOptions.theme === "dark" ? hashOptions.theme : prefs.theme);
+    setAccent(hashOptions.accent ?? prefs.accent);
+    setPanelCollapsed(hashOptions.panel ? hashOptions.panel === "collapsed" : prefs.panelCollapsed);
 }
 
 /** 收起左側工作台，把整個寬度讓給結果區。 */
@@ -493,7 +511,8 @@ async function run() {
     try {
         const result = await api.records(payload);
         setResult(result);
-        activateView("masterDetail");
+        activateView(hashOptions.view ?? "masterDetail");
+        applyPresentation({ view: hashOptions.view, tableSource: hashOptions.table });
         updateTarget(`${result.connection.label}`);
         el.runHint.className = "hint ready";
         el.runHint.textContent = `上次取得 ${result.recordCount} 筆（位移 ${payload.offset}）。`;
